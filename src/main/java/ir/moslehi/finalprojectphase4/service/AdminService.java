@@ -1,6 +1,7 @@
 package ir.moslehi.finalprojectphase4.service;
 
 import ir.moslehi.finalprojectphase4.exception.DuplicateInformationException;
+import ir.moslehi.finalprojectphase4.exception.NotFoundException;
 import ir.moslehi.finalprojectphase4.model.Admin;
 import ir.moslehi.finalprojectphase4.model.enums.Role;
 import ir.moslehi.finalprojectphase4.repository.AdminRepository;
@@ -22,6 +23,12 @@ public class AdminService {
         admin.setRole(Role.ROLE_ADMIN);
         admin.setEnabled(true);
         return adminRepository.save(admin);
+    }
+
+    public Admin findByEmail(String email) {
+        return adminRepository.findByEmail(email).orElseThrow(
+                () -> new NotFoundException("the admin with email" + email + "wasn't found")
+        );
     }
 
 }

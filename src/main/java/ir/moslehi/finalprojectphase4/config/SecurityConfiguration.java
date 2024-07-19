@@ -1,6 +1,9 @@
 package ir.moslehi.finalprojectphase4.config;
 
-import ir.moslehi.finalprojectphase4.service.PersonService;
+import ir.moslehi.finalprojectphase4.exception.NotFoundException;
+import ir.moslehi.finalprojectphase4.service.AdminService;
+import ir.moslehi.finalprojectphase4.service.CustomerService;
+import ir.moslehi.finalprojectphase4.service.ExpertService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -22,8 +25,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 
-    private final PersonService personService;
-private final BCryptPasswordEncoder passwordEncoder;
+    private final AdminService adminService;
+    private final ExpertService expertService;
+    private final CustomerService customerService;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -45,8 +50,19 @@ private final BCryptPasswordEncoder passwordEncoder;
     @Autowired
     public void configureBuild(AuthenticationManagerBuilder auth) throws Exception {
         auth
-                .userDetailsService(personService::findByEmail)
+                .userDetailsService(username -> {
+                    try {
+                        return customerService.findByEmail(username);
+                    } catch (NotFoundException e) {
+                        // Try next service
+                    }
+                    try {
+                        return expertService.findByEmail(username);
+                    } catch (NotFoundException e) {
+                        // Try next service
+                    }
+                    return adminService.findByEmail(username);
+                })
                 .passwordEncoder(passwordEncoder);
     }
-
 }

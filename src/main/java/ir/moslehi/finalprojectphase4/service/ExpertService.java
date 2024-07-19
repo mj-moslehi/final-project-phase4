@@ -60,7 +60,7 @@ public class ExpertService {
 
     @Transactional
     public String confirmToken(String token) {
-        Expert expert = findByEmail(checkConfirmToken(token).getPerson().getEmail());
+        Expert expert = findByEmail(checkConfirmToken(token).getExpert().getEmail());
         expert.setExpertStatus(ExpertStatus.WAITING_FOR_CONFIRMED);
         expertRepository.save(expert);
         return "confirmed";
@@ -161,12 +161,12 @@ public class ExpertService {
 
         String token = UUID.randomUUID().toString();
 
-        ConfirmationToken confirmationToken = new ConfirmationToken(
-                token,
-                LocalDateTime.now(),
-                LocalDateTime.now().plusMinutes(15),
-                expert
-        );
+        ConfirmationToken confirmationToken = ConfirmationToken.builder()
+                .token(token)
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusMinutes(15))
+                .expert(expert)
+                .build();
 
         confirmationTokenService.saveConfirmationToken(confirmationToken);
 
@@ -191,7 +191,7 @@ public class ExpertService {
         expertRepository.save(expert);
     }
 
-    public Expert update(Expert expert,String email) {
+    public Expert update(Expert expert, String email) {
         Expert foudnExpert = findByEmail(email);
         foudnExpert.setPassword(passwordEncoder.encode(expert.getPassword()));
         foudnExpert.setEmail(expert.getEmail());

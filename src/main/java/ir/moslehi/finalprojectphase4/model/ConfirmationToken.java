@@ -1,16 +1,16 @@
 package ir.moslehi.finalprojectphase4.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Builder
 public class ConfirmationToken {
 
     @SequenceGenerator(
@@ -37,15 +37,8 @@ public class ConfirmationToken {
     private LocalDateTime confirmedAt;
 
     @ManyToOne
-    private Person person;
+    private Customer customer;
 
-    public ConfirmationToken(String token,
-                             LocalDateTime createdAt,
-                             LocalDateTime expiresAt,
-                             Person person) {
-        this.token = token;
-        this.createdAt = createdAt;
-        this.expiresAt = expiresAt;
-        this.person = person;
-    }
+    @ManyToOne
+    private Expert expert;
 }

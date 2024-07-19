@@ -9,7 +9,6 @@ import lombok.experimental.SuperBuilder;
 import java.util.Date;
 import java.util.List;
 
-@AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter

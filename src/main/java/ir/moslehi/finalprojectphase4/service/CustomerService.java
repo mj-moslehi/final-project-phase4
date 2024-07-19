@@ -51,7 +51,7 @@ public class CustomerService {
 
     @Transactional
     public String confirmToken(String token) {
-        customerRepository.enableCustomer(expertService.checkConfirmToken(token).getPerson().getEmail());
+        customerRepository.enableCustomer(expertService.checkConfirmToken(token).getCustomer().getEmail());
         return "confirmed";
     }
 
@@ -61,12 +61,12 @@ public class CustomerService {
 
         String token = UUID.randomUUID().toString();
 
-        ConfirmationToken confirmationToken = new ConfirmationToken(
-                token,
-                LocalDateTime.now(),
-                LocalDateTime.now().plusMinutes(15),
-                customer
-        );
+        ConfirmationToken confirmationToken = ConfirmationToken.builder()
+                .token(token)
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusMinutes(15))
+                .customer(customer)
+                .build();
 
         confirmationTokenService.saveConfirmationToken(confirmationToken);
 
@@ -88,7 +88,7 @@ public class CustomerService {
         );
     }
 
-    public Customer update(Customer customer,String email) {
+    public Customer update(Customer customer, String email) {
         Customer foundeCustomer = findByEmail(email);
         foundeCustomer.setPassword(passwordEncoder.encode(customer.getPassword()));
         foundeCustomer.setEmail(customer.getEmail());

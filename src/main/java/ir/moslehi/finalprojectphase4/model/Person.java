@@ -17,14 +17,13 @@ import java.util.List;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PROTECTED)
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-@Entity
+@MappedSuperclass
 @SuperBuilder
 
 public class Person implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
     String firstname;
