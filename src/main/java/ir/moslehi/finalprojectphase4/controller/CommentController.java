@@ -30,7 +30,6 @@ public class CommentController {
     private final CommentService commentService;
     private final ExpertService expertService;
 
-    //todo
     @PostMapping("/register-comment")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     public ResponseEntity<CommentSaveResponse> registerComment(@Valid @RequestBody CommentSaveRequest request) {
@@ -40,7 +39,6 @@ public class CommentController {
         return new ResponseEntity<>(CommentMapper.INSTANCE.modelToCommentSaveResponse(comment), HttpStatus.CREATED);
     }
 
-    //todo
     @GetMapping("/show-comments-for-expert")
     @PreAuthorize("hasRole('ROLE_EXPERT')")
     public ResponseEntity<List<CommentListForExpert>> showComment(Principal principal){

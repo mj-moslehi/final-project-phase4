@@ -43,7 +43,6 @@ public class SuggestionController {
                 (SuggestionMapper.INSTANCE.modelToSuggestionSaveResponse(suggestion), HttpStatus.CREATED);
     }
 
-    //todo
     @PatchMapping("/choosing-expert")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     public ResponseEntity<OrdersSaveResponse> choosingExpert(@RequestBody OrderChoosingExpert choosingExpert,Principal principal) {
@@ -52,7 +51,6 @@ public class SuggestionController {
         return new ResponseEntity<>(OrderMapper.INSTANCE.modelToOrdersSaveResponse(orders), HttpStatus.CREATED);
     }
 
-    //todo
     @PatchMapping("/update-order-status-to-started")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     public ResponseEntity<OrdersSaveResponse> updateOrderStatusToStarted(@RequestParam Long orderId, Principal principal) {
@@ -60,7 +58,6 @@ public class SuggestionController {
         return new ResponseEntity<>(OrderMapper.INSTANCE.modelToOrdersSaveResponse(orders), HttpStatus.CREATED);
     }
 
-    //todo
     @PatchMapping("/update-order-status-to-done")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     public ResponseEntity<OrdersSaveResponse> updateOrderStatusToDone(@RequestParam Long orderId, Principal principal) {
@@ -68,7 +65,6 @@ public class SuggestionController {
         return new ResponseEntity<>(OrderMapper.INSTANCE.modelToOrdersSaveResponse(orders), HttpStatus.CREATED);
     }
 
-    //todo
     @PatchMapping("/paying-from-validity")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     public ResponseEntity<OrdersSaveResponse> payingFromValidity(@RequestParam Long orderId, Principal principal) {
@@ -83,7 +79,6 @@ public class SuggestionController {
                 (suggestionService.validOrdersForExpert(principal.getName())), HttpStatus.FOUND);
     }
 
-    //todo
     @GetMapping("/sorted-suggestions")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     public ResponseEntity<List<SuggestionSaveResponse>> sortedSuggestionForCustomer

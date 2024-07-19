@@ -41,7 +41,6 @@ public class AdminController {
     private final ExpertService expertService;
     private final OrdersService ordersService;
 
-    //todo
     @PostMapping("/register-admin")
     public ResponseEntity<AdminSaveResponse> registerAdmin(@Valid @RequestBody AdminSaveRequest request) {
         Admin mappedAdmin = AdminMapper.INSTANCE.adminSaveRequestToModel(request);
@@ -49,7 +48,6 @@ public class AdminController {
         return new ResponseEntity<>(AdminMapper.INSTANCE.modelToAdminSaveResponse(savedAdmin), HttpStatus.CREATED);
     }
 
-    //todo
     @GetMapping("/person-search")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<UserSearchResponse> personSearch(@RequestBody UserSearchRequest request) {
@@ -66,7 +64,6 @@ public class AdminController {
         return new ResponseEntity<>(new UserSearchResponse(userList), HttpStatus.FOUND);
     }
 
-    //todo
     @GetMapping("/order-search")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<List<OrdersSaveResponse>> orderSearch(@RequestBody OrderSearchRequest request) {

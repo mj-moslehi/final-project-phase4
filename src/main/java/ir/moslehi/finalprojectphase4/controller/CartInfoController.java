@@ -23,7 +23,6 @@ public class CartInfoController {
 
     private final CartInfoService cartInfoService;
 
-    //todo
     @PostMapping("/register-cart-info")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     public ResponseEntity<CartInfoSaveResponse> registerCartInfo(@Valid @RequestBody CartInfoSaveRequest request) {
@@ -31,7 +30,6 @@ public class CartInfoController {
         return new ResponseEntity<>(CartInfoMapper.INSTANCE.modelToCartInfoSaveResponse(bankCart), HttpStatus.CREATED);
     }
 
-    //todo
     @PostMapping("/payment-cart-info")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     public ResponseEntity<CartInfoSaveResponse> paymentCartInfo(@Valid @RequestBody CartInfoSignInRequest signInRequest) {

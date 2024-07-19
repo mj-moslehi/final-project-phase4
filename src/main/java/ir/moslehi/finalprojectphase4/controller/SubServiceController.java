@@ -24,7 +24,6 @@ public class SubServiceController {
 
     private final SubServiceService subServiceService;
 
-    //todo
     @PostMapping("/register-sub-service")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<SubServiceSaveResponse> registerSubService
@@ -35,7 +34,6 @@ public class SubServiceController {
                 , HttpStatus.CREATED);
     }
 
-    //todo
     @PatchMapping("/update-sub-service")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<SubServiceUpdateResponse> updateSubService

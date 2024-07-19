@@ -26,7 +26,6 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
-    //todo
     @PostMapping("/register-customer")
     public ResponseEntity<CustomerSaveResponse> registerCustomer(@Valid @RequestBody CustomerSaveRequest request) {
         Customer mappedCustomer = CustomerMapper.INSTANCE.customerSaveRequestToModel(request);
@@ -34,7 +33,6 @@ public class CustomerController {
                 (customerService.register(mappedCustomer)), HttpStatus.CREATED);
     }
 
-    //todo
     @PatchMapping("/update-customer")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     public ResponseEntity<CustomerSaveResponse> updateCustomer
@@ -44,13 +42,11 @@ public class CustomerController {
         return new ResponseEntity<>(CustomerMapper.INSTANCE.modelToCustomerSaveResponse(customer), HttpStatus.CREATED);
     }
 
-    //todo
     @GetMapping( "/api/customer/registration/confirm")
     public String confirm(@RequestParam("token") String token) {
         return customerService.confirmToken(token);
     }
 
-    //todo
     @GetMapping("/order-history-customer")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     public ResponseEntity<List<OrdersSaveResponse>> orderHistoryForCustomer(Principal principal,
@@ -60,7 +56,6 @@ public class CustomerController {
                         (customerService.ordersHistoryCustomer(principal.getName(), orderStatus)), HttpStatus.ACCEPTED);
     }
 
-    //todo
     @GetMapping("/customer-see-wallet")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     public Long seeWallet(Principal principal){

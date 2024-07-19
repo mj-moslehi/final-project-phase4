@@ -22,7 +22,6 @@ public class OrdersController {
 
     private final OrdersService ordersService;
 
-    //todo
     @PostMapping("/register-order")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     public ResponseEntity<OrdersSaveResponse> registerOrders(@Valid @RequestBody OrdersSaveRequest request) {

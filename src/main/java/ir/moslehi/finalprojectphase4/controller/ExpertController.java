@@ -26,7 +26,6 @@ public class ExpertController {
 
     private final ExpertService expertService;
 
-    //todo
     @PostMapping("/register-expert")
     public ResponseEntity<ExpertSaveResponse> registerExpert(@Valid @RequestBody ExpertSaveRequest request) {
         Expert mappedExpert = ExpertMapper.INSTANCE.expertSaveRequestToModel(request);
@@ -43,14 +42,12 @@ public class ExpertController {
         return new ResponseEntity<>(ExpertMapper.INSTANCE.modelToExpertSaveResponse(expert), HttpStatus.CREATED);
     }
 
-    //todo
     @PostMapping("/write-image")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void writeImage(@Valid @RequestBody ExpertWriteImage writeImage) {
         expertService.writeImage(writeImage.path(), writeImage.expert().id());
     }
 
-    //todo
     @PatchMapping("/confirming-expert")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<ExpertSaveResponse> confirmingExpert(@RequestBody ExpertIdRequest expertId) {
@@ -67,13 +64,11 @@ public class ExpertController {
                         (expertService.ordersHistoryExpert(principal.getName(), orderStatus)), HttpStatus.ACCEPTED);
     }
 
-    //todo
     @GetMapping("/api/expert/registration/confirm")
     public String confirm(@RequestParam("token") String token) {
         return expertService.confirmToken(token);
     }
 
-    //todo
     @PatchMapping("/read-image")
     @PreAuthorize("hasRole('ROLE_EXPERT')")
     public ResponseEntity<ExpertSaveResponse> readImage(Principal principal, @RequestParam MultipartFile file) throws IOException {

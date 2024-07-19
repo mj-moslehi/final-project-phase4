@@ -20,7 +20,6 @@ public class ExpertSubServiceController {
 
     private final ExpertSubServiceService expertSubServiceService;
 
-    //todo
     @PostMapping("/register-expert-sub-service")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<ExpertSubServiceSaveResponse> registerExpertSubService
@@ -31,7 +30,6 @@ public class ExpertSubServiceController {
                 modelToExpertSubServiceSaveResponse(expertSubService), HttpStatus.CREATED);
     }
 
-    //todo
     @DeleteMapping("/delete-expert-sub-service")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void deleteExpertSubService(@RequestBody ExpertSubServiceSaveAndDeleteRequest deleteRequest){

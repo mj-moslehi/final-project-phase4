@@ -22,7 +22,6 @@ public class ServiceController {
 
     private final ServiceService serviceService;
 
-    //todo
     @PostMapping("/register-service")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<ServiceSaveResponse> registerService(@Valid @RequestBody ServiceSaveRequest request){
