@@ -1,8 +1,11 @@
 package ir.moslehi.finalprojectphase4.service;
 
+import com.mewebstudio.captcha.Captcha;
+import com.mewebstudio.captcha.GeneratedCaptcha;
 import ir.moslehi.finalprojectphase4.dto.cartInfo.CartInfoSaveRequest;
 import ir.moslehi.finalprojectphase4.dto.cartInfo.CartInfoSignInRequest;
 import ir.moslehi.finalprojectphase4.exception.DuplicateInformationException;
+import ir.moslehi.finalprojectphase4.exception.NotFoundException;
 import ir.moslehi.finalprojectphase4.exception.NotValidInput;
 import ir.moslehi.finalprojectphase4.mapper.CartInfoMapper;
 import ir.moslehi.finalprojectphase4.model.CartInfo;
@@ -14,6 +17,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -40,6 +47,12 @@ public class CartInfoService {
         return cartInfoRepository.save(mapped);
     }
 
+    public CartInfo findById(Long id) {
+        return cartInfoRepository.findById(id).orElseThrow(
+                () -> new NotFoundException("the cart info with id :" + id + "wasn't found")
+        );
+    }
+
     public Date validDate(String dateString) {
         Date now = new Date();
         Date date = null;
@@ -53,7 +66,7 @@ public class CartInfoService {
         return date;
     }
 
-    public CartInfo payment(CartInfoSignInRequest signInRequest, Long orderId) {
+    public CartInfo payment(CartInfoSignInRequest signInRequest) throws IOException {
         CartInfo mappedCartInfo = CartInfoMapper.INSTANCE.cartInfoSignInRequestToModel(signInRequest);
         mappedCartInfo.setExpirationDate(validDate(signInRequest.stringDate()));
         if (cartInfoRepository.findByCartNumberAndCvv2
@@ -62,12 +75,13 @@ public class CartInfoService {
                     cartInfoRepository.findByCartNumberAndCvv2
                             (mappedCartInfo.getCartNumber(), mappedCartInfo.getCvv2()).get();
 
-            return checkExpirationDate(mappedCartInfo, foundCartInfo, orderId);
+            return checkExpirationDate(mappedCartInfo, foundCartInfo, signInRequest.order().id());
 
         } else throw new NotValidInput("cart number or cvv2 wasn't found");
     }
 
-    public CartInfo checkExpirationDate(CartInfo cartInfo, CartInfo foundCartInfo, Long orderId) {
+    public CartInfo checkExpirationDate(CartInfo cartInfo, CartInfo foundCartInfo, Long orderId) throws IOException {
+
         Calendar calendar1 = Calendar.getInstance();
         calendar1.setTime(foundCartInfo.getExpirationDate());
 
@@ -80,6 +94,7 @@ public class CartInfoService {
             Orders orders = suggestionService.validOrderForCustomerWithOrderStatus
                     (OrderStatus.DONE, foundCartInfo.getCustomer(), orderId);
             addMoneyToExpert(orders);
+            captchaImage(foundCartInfo);
             ordersService.updateOrderStatus(orders, OrderStatus.PAID);
             return foundCartInfo;
         } else throw new NotValidInput("the password or expiration date wasn't valid");
@@ -89,6 +104,16 @@ public class CartInfoService {
         Expert expert = orders.getExpert();
         expertService.updateValidity(expert,
                 (suggestionService.findByOrdersAndExpert(orders, expert).getProposedPrice() * 7) / 10);
+    }
+
+    public void captchaImage(CartInfo cartInfo) throws IOException {
+        com.mewebstudio.captcha.Captcha captcha = new Captcha();
+        GeneratedCaptcha generatedCaptcha = captcha.generate();
+        BufferedImage captchaImage = generatedCaptcha.getImage();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ImageIO.write(captchaImage, "jpg", byteArrayOutputStream);
+        cartInfo.setCaptchaImage(byteArrayOutputStream.toByteArray());
+        cartInfo.setHiddenCaptcha(generatedCaptcha.getCode());
     }
 
 }

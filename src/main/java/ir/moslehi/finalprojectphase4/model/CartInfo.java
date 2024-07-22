@@ -14,7 +14,7 @@ import java.util.Date;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 
-public class CartInfo  {
+public class CartInfo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,6 +29,13 @@ public class CartInfo  {
     String password;
 
     Date expirationDate;
+
+    String captchaAnswer;
+
+    String hiddenCaptcha;
+
+    @Lob
+    byte[] captchaImage;
 
     @ManyToOne
     Customer customer;

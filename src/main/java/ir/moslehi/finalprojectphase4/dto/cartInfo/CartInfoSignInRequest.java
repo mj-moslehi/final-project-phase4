@@ -17,6 +17,9 @@ public record CartInfoSignInRequest(
         @Pattern(regexp = "^((?:19|20)[0-9][0-9])-(0?[1-9]|1[012])$")
         String stringDate,
 
+        String captchaAnswer,
+
         OrderIdRequest order
+
 ) {
 }

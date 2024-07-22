@@ -109,8 +109,10 @@ public class OrdersService {
         if (searchRequest.subServiceName() != null)
             predicates.add(builder.equal(root.get("subService"), subServiceService.findByName(searchRequest.subServiceName())));
 
-        if (searchRequest.orderDate() != null)
-            predicates.add(builder.greaterThanOrEqualTo(root.get("dateOfOrder"), searchRequest.orderDate()));
+        if (searchRequest.orderDateStart() != null)
+            predicates.add(builder.greaterThanOrEqualTo(root.get("dateOfOrder"), searchRequest.orderDateStart()));
+        if (searchRequest.orderDateFinish() != null)
+            predicates.add(builder.lessThanOrEqualTo(root.get("dateOfOrder"), searchRequest.orderDateFinish()));
 
         orderQuery.where(builder.and(predicates.toArray(predicates.toArray(new Predicate[]{}))));
 

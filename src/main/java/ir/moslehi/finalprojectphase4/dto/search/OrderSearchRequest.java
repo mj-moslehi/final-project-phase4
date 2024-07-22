@@ -17,7 +17,9 @@ public record OrderSearchRequest(
 
     String subServiceName,
 
-    Date orderDate
+    Date orderDateStart,
+
+    Date orderDateFinish
 
 ) {
 }
