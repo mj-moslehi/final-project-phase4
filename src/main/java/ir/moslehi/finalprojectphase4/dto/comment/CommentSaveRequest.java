@@ -1,7 +1,6 @@
 package ir.moslehi.finalprojectphase4.dto.comment;
 
-import ir.moslehi.finalprojectphase4.dto.customer.CustomerIdRequest;
-import ir.moslehi.finalprojectphase4.dto.expert.ExpertIdRequest;
+import ir.moslehi.finalprojectphase4.dto.expert.ExpertEmailRequest;
 import ir.moslehi.finalprojectphase4.dto.orders.OrderIdRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -16,9 +15,7 @@ public record CommentSaveRequest(
         @Max(value = 5)
         Double score,
 
-        CustomerIdRequest customer,
-
-        ExpertIdRequest expert,
+        ExpertEmailRequest expert,
 
         OrderIdRequest orders
 ) {

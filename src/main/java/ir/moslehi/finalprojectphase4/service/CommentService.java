@@ -20,13 +20,13 @@ public class CommentService {
     private final CustomerService customerService;
     private final ExpertService expertService;
 
-    public Comment save(Comment comment) {
-        Customer customer = customerService.findById(comment.getCustomer().getId());
-        Expert expert = expertService.findById(comment.getExpert().getId());
+    public Comment save(Comment comment, String customerEmail) {
+        Customer customer = customerService.findByEmail(customerEmail);
+        Expert expert = expertService.findByEmail(comment.getExpert().getEmail());
         Orders orders = suggestionService.
-                validOrderForCustomerWithOrderStatus(OrderStatus.DONE, customer, comment.getOrders().getId());
+                validOrderForCustomerWithOrderStatus(OrderStatus.PAID, customer, comment.getOrders().getId());
         if (!orders.getExpert().equals(expert))
-            throw new NotValidInput("the expert id isn't valid for this order");
+            throw new NotValidInput("the expert isn't valid for this order");
         if (commentRepository.findByOrders(orders).isPresent())
             throw new DuplicateInformationException("this comment for this order have been saved");
         comment.setExpert(expert);
@@ -36,7 +36,7 @@ public class CommentService {
 
     public List<Comment> findByExpert(Expert expert) {
         if (commentRepository.findByExpert(expert).isEmpty())
-            throw new NotFoundException("there isn't any comment for expert by Id : "+expert.getId());
+            throw new NotFoundException("there isn't any comment for expert by Id : " + expert.getId());
         return commentRepository.findByExpert(expert);
     }
 

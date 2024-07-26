@@ -32,19 +32,20 @@ public class CommentController {
 
     @PostMapping("/register-comment")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
-    public ResponseEntity<CommentSaveResponse> registerComment(@Valid @RequestBody CommentSaveRequest request) {
+    public ResponseEntity<CommentSaveResponse> registerComment
+            (@Valid @RequestBody CommentSaveRequest request, Principal principal) {
         Comment mapper = CommentMapper.INSTANCE.commentSaveRequestToModel(request);
-        Comment comment = commentService.save(mapper);
-        expertService.updateScoreWithCommentScore(comment.getExpert(),comment.getScore());
+        Comment comment = commentService.save(mapper, principal.getName());
+        expertService.updateScoreWithCommentScore(comment.getExpert(), comment.getScore());
         return new ResponseEntity<>(CommentMapper.INSTANCE.modelToCommentSaveResponse(comment), HttpStatus.CREATED);
     }
 
     @GetMapping("/show-comments-for-expert")
     @PreAuthorize("hasRole('ROLE_EXPERT')")
-    public ResponseEntity<List<CommentListForExpert>> showComment(Principal principal){
+    public ResponseEntity<List<CommentListForExpert>> showComment(Principal principal) {
         Expert expert = expertService.findByEmail(principal.getName());
         List<Comment> commentList = commentService.findByExpert(expert);
-        return new ResponseEntity<>(CommentMapper.INSTANCE.modelToCommentListForExpert(commentList),HttpStatus.OK);
+        return new ResponseEntity<>(CommentMapper.INSTANCE.modelToCommentListForExpert(commentList), HttpStatus.OK);
     }
 
 }
