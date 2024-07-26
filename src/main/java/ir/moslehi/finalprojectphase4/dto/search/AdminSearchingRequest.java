@@ -1,11 +1,12 @@
 package ir.moslehi.finalprojectphase4.dto.search;
 
 import ir.moslehi.finalprojectphase4.model.enums.ExpertStatus;
+import ir.moslehi.finalprojectphase4.model.enums.OrderStatus;
 import ir.moslehi.finalprojectphase4.model.enums.Role;
 
 import java.util.Date;
 
-public record UserSearchRequest(
+public record AdminSearchingRequest(
 
         Role role,
 
@@ -25,13 +26,25 @@ public record UserSearchRequest(
 
         Date dateOfSignUpEnd,
 
-        Integer orderNum,
+        Integer orderNumForUser,
 
-        Integer orderNumInDone,
+        Integer orderNumInDoneForUser,
 
-        Boolean enabled,
+        Boolean userEnabled,
 
-        String subServiceName
+        String expertSubServiceName,
+
+//        Boolean searchingInOrders,
+
+        OrderStatus orderStatus,
+
+        String orderServiceName,
+
+        String orderSubServiceName,
+
+        Date orderDateStart,
+
+        Date orderDateFinish
 
 ) {
 }
