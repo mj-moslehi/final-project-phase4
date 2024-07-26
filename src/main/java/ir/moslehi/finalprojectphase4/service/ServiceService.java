@@ -18,11 +18,6 @@ public class ServiceService {
         return serviceRepository.save(service);
     }
 
-    public ir.moslehi.finalprojectphase4.model.Service findById(Long id) {
-        return serviceRepository.findById(id).orElseThrow(
-                () -> new NotFoundException("service with id " + id + " wasn't found"));
-    }
-
     public ir.moslehi.finalprojectphase4.model.Service findByName(String name) {
         return serviceRepository.findByName(name).orElseThrow(
                 () -> new NotFoundException("service with name " + name + " wasn't found"));
