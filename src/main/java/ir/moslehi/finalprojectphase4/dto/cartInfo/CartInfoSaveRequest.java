@@ -1,6 +1,5 @@
 package ir.moslehi.finalprojectphase4.dto.cartInfo;
 
-import ir.moslehi.finalprojectphase4.dto.customer.CustomerIdRequest;
 import jakarta.validation.constraints.Pattern;
 
 public record CartInfoSaveRequest(
@@ -15,8 +14,6 @@ public record CartInfoSaveRequest(
         String password,
 
         @Pattern(regexp = "^((?:19|20)[0-9][0-9])-(0?[1-9]|1[012])$")
-        String stringDate,
-
-        CustomerIdRequest customer
+        String stringDate
 ) {
 }

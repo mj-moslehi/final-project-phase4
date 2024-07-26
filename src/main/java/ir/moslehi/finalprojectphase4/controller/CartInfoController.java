@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.io.IOException;
+import java.security.Principal;
+import java.text.ParseException;
 
 @Controller
 @RequiredArgsConstructor
@@ -31,15 +33,16 @@ public class CartInfoController {
 
     @PostMapping("/register-cart-info")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
-    public ResponseEntity<CartInfoSaveResponse> registerCartInfo(@Valid @RequestBody CartInfoSaveRequest request) {
-        CartInfo bankCart = cartInfoService.save(request);
+    public ResponseEntity<CartInfoSaveResponse> registerCartInfo
+            (@Valid @RequestBody CartInfoSaveRequest request, Principal principal) throws ParseException {
+        CartInfo bankCart = cartInfoService.save(request,principal.getName());
         return new ResponseEntity<>(CartInfoMapper.INSTANCE.modelToCartInfoSaveResponse(bankCart), HttpStatus.CREATED);
     }
 
     @PostMapping("/payment-cart-info")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     public ResponseEntity<CartInfoSaveResponse> paymentCartInfo
-            (@Valid @RequestBody CartInfoSignInRequest signInRequest) throws IOException {
+            (@Valid @RequestBody CartInfoSignInRequest signInRequest) throws IOException, ParseException {
         CartInfo cartInfo = cartInfoService.payment(signInRequest);
         cartInfoId = cartInfo.getId();
         return new ResponseEntity<>(CartInfoMapper.INSTANCE.modelToCartInfoSaveResponse(cartInfo), HttpStatus.OK);

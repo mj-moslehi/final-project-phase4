@@ -1,6 +1,6 @@
 package ir.moslehi.finalprojectphase4.dto.cartInfo;
 
-import ir.moslehi.finalprojectphase4.dto.customer.CustomerIdRequest;
+import ir.moslehi.finalprojectphase4.dto.customer.CustomerEmailRequest;
 
 import java.util.Date;
 
@@ -9,6 +9,6 @@ public record CartInfoSaveResponse(
         String cvv2,
         String password,
         Date expirationDate,
-        CustomerIdRequest customer
+        CustomerEmailRequest customer
 ) {
 }
