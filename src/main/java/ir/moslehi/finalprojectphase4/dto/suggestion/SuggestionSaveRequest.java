@@ -1,6 +1,6 @@
 package ir.moslehi.finalprojectphase4.dto.suggestion;
 
-import ir.moslehi.finalprojectphase4.dto.expert.ExpertIdRequest;
+import ir.moslehi.finalprojectphase4.dto.expert.ExpertEmailRequest;
 import ir.moslehi.finalprojectphase4.dto.orders.OrderIdRequest;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
@@ -16,7 +16,7 @@ public record SuggestionSaveRequest(
         @Min(value = 0)
         Long proposedPrice,
 
-        ExpertIdRequest expert,
+        ExpertEmailRequest expert,
 
         OrderIdRequest orders
         ) {

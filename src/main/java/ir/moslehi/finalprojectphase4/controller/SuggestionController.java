@@ -22,6 +22,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.text.ParseException;
 import java.util.List;
 
 @RestController
@@ -36,7 +37,7 @@ public class SuggestionController {
     @PostMapping("/register-suggestion")
     @PreAuthorize("hasRole('ROLE_EXPERT')")
     public ResponseEntity<SuggestionSaveResponse> registerSuggestion
-            (@Valid @RequestBody SuggestionSaveRequest request) {
+            (@Valid @RequestBody SuggestionSaveRequest request) throws ParseException {
         Suggestion suggestion = suggestionService.save(request);
         ordersService.updateOrderStatus(suggestion.getOrders(), OrderStatus.WAITING_FOR_SPECIALIST_SELECTION);
         return new ResponseEntity<>
@@ -45,9 +46,10 @@ public class SuggestionController {
 
     @PatchMapping("/choosing-expert")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
-    public ResponseEntity<OrdersSaveResponse> choosingExpert(@RequestBody OrderChoosingExpert choosingExpert,Principal principal) {
+    public ResponseEntity<OrdersSaveResponse> choosingExpert
+            (@RequestBody OrderChoosingExpert choosingExpert,Principal principal) {
         Orders orders = suggestionService.validExpertForOrder
-                (choosingExpert.expert().id(), choosingExpert.order().id(), principal.getName());
+                (choosingExpert.expert().email(), choosingExpert.order().id(), principal.getName());
         return new ResponseEntity<>(OrderMapper.INSTANCE.modelToOrdersSaveResponse(orders), HttpStatus.CREATED);
     }
 

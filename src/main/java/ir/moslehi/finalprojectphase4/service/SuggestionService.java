@@ -4,6 +4,7 @@ import ir.moslehi.finalprojectphase4.dto.suggestion.SuggestionSaveRequest;
 import ir.moslehi.finalprojectphase4.exception.DuplicateInformationException;
 import ir.moslehi.finalprojectphase4.exception.NotFoundException;
 import ir.moslehi.finalprojectphase4.exception.NotValidInput;
+import ir.moslehi.finalprojectphase4.exception.NullPointerException;
 import ir.moslehi.finalprojectphase4.mapper.SuggestionMapper;
 import ir.moslehi.finalprojectphase4.model.*;
 import ir.moslehi.finalprojectphase4.model.enums.OrderStatus;
@@ -12,6 +13,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -26,17 +28,17 @@ public class SuggestionService {
     private final ExpertSubServiceService expertSubServiceService;
     private final CustomerService customerService;
 
-    public Suggestion save(SuggestionSaveRequest request) {
+    public Suggestion save(SuggestionSaveRequest request) throws ParseException {
 
         Suggestion mappedSuggestion = SuggestionMapper.INSTANCE.suggestionSaveRequestToModel(request);
 
         mappedSuggestion.setStartDate(ordersService.validDate(request.dateStringStart()));
         mappedSuggestion.setFinishDate(ordersService.validDate(request.dateStringFinish()));
-        mappedSuggestion.setOrders(ordersForExpert(request.expert().id(), request.orders().id()));
+        mappedSuggestion.setOrders(ordersForExpert(request.expert().email(), request.orders().id()));
         validPriceForSuggestion(request.orders().id(), mappedSuggestion.getProposedPrice());
-
         Orders orders = mappedSuggestion.getOrders();
-        Expert expert = mappedSuggestion.getExpert();
+        Expert expert = expertService.findByEmail(mappedSuggestion.getExpert().getEmail());
+        mappedSuggestion.setExpert(expert);
 
         if (mappedSuggestion.getStartDate() == null || mappedSuggestion.getFinishDate() == null ||
                 mappedSuggestion.getOrders() == null)
@@ -46,9 +48,11 @@ public class SuggestionService {
             throw new DuplicateInformationException(
                     suggestionRepository.findByOrdersAndExpert(orders, expert).get().getId() + " is duplicate");
 
-        if (mappedSuggestion.getStartDate().after(mappedSuggestion.getFinishDate()) &&
-                mappedSuggestion.getStartDate().after(orders.getDateOfOrder()))
-            throw new NotValidInput("not valid date");
+        if (mappedSuggestion.getStartDate().after(mappedSuggestion.getFinishDate()))
+            throw new NotValidInput("start date is after finish date");
+
+        if (mappedSuggestion.getStartDate().before(orders.getDateOfOrder()))
+            throw new NotValidInput("suggestion start date is before date of order");
 
         return suggestionRepository.save(mappedSuggestion);
     }
@@ -65,35 +69,31 @@ public class SuggestionService {
             throw new NotValidInput("the price isn't valid");
     }
 
-    public Orders ordersForExpert(Long expertId, Long orderId) {
-        Expert expert = expertService.findById(expertId);
-        Orders orders = null;
-        List<Orders> orderList = expertSubServiceService.findSubServiceByExpert(expert).stream()
-                .map(SubService::getOrders).flatMap(List::stream).filter(orders1 -> orders1.getOrderStatus().equals(
-                        OrderStatus.WAITING_FOR_The_SUGGESTION_OF_EXPERTS)
-                        ||
-                        orders1.getOrderStatus().equals(OrderStatus.WAITING_FOR_SPECIALIST_SELECTION)).toList();
-
-        if (orderList.contains(ordersService.findById(orderId))) orders = ordersService.findById(orderId);
-        return orders;
+    public Orders ordersForExpert(String expertEmail, Long orderId) {
+        Expert expert = expertService.findByEmail(expertEmail);
+        List<Orders> ordersList = expertSubServiceService.findSubServiceByExpert(expert)
+                .stream()
+                .flatMap(subService -> ordersService.findBySubServiceAndValidOrderStatus(subService).stream())
+                .toList();
+        if (ordersList.contains(ordersService.findById(orderId))) return ordersService.findById(orderId);
+        else throw new NotFoundException("there isn't any order with this expert and order");
     }
 
     public List<Orders> validOrdersForExpert(String email) {
         Expert expert = expertService.findByEmail(email);
-        return expertSubServiceService.findSubServiceByExpert(expert).stream()
-                .map(SubService::getOrders).flatMap(List::stream).filter(orders1 -> orders1.getOrderStatus().equals(
-                        OrderStatus.WAITING_FOR_The_SUGGESTION_OF_EXPERTS)
-                        ||
-                        orders1.getOrderStatus().equals(OrderStatus.WAITING_FOR_SPECIALIST_SELECTION)).toList();
+        return expertSubServiceService.findSubServiceByExpert(expert)
+                .stream()
+                .flatMap(subService -> ordersService.findBySubServiceAndValidOrderStatus(subService).stream())
+                .toList();
     }
 
-    public Orders validExpertForOrder(Long expertId, Long orderId, String customerEmail) {
+    public Orders validExpertForOrder(String expertEmail, Long orderId, String customerEmail) {
         Customer customer = customerService.findByEmail(customerEmail);
         Orders orders = validOrderForCustomerWithOrderStatus(
                 OrderStatus.WAITING_FOR_SPECIALIST_SELECTION, customer, orderId);
         List<Expert> expertList = suggestionListSorted(orders.getId()).stream().map(Suggestion::getExpert).toList();
-        if (expertList.contains(expertService.findById(expertId))) {
-            orders.setExpert(expertService.findById(expertId));
+        if (expertList.contains(expertService.findByEmail(expertEmail))) {
+            orders.setExpert(expertService.findByEmail(expertEmail));
             return ordersService.updateOrderStatus(orders, OrderStatus.WAITING_FOR_THE_SPECIALIST_TO_COME_TO_YOUR_PLACE);
         } else throw new NotValidInput("expert wasn't valid for your order");
     }
