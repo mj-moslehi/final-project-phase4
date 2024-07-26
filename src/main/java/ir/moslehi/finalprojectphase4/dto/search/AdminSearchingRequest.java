@@ -34,8 +34,6 @@ public record AdminSearchingRequest(
 
         String expertSubServiceName,
 
-//        Boolean searchingInOrders,
-
         OrderStatus orderStatus,
 
         String orderServiceName,

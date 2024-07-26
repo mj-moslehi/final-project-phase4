@@ -52,13 +52,13 @@ public class AdminService {
                 .stream()
                 .map(ExpertMapper.INSTANCE::modelToExpertSaveResponse)
                 .toList();
-//        List<OrdersSaveResponse> ordersSaveResponseList = ordersService.ordersSearch(searchingRequest)
-//                .stream()
-//                .map(OrderMapper.INSTANCE::modelToOrdersSaveResponse)
-//                .toList();
+        List<OrdersSaveResponse> ordersSaveResponseList = ordersService.ordersSearch(searchingRequest)
+                .stream()
+                .map(OrderMapper.INSTANCE::modelToOrdersSaveResponse)
+                .toList();
         List<Object> list = new ArrayList<>(customerSaveResponseList);
         list.addAll(technicianSaveResponseList);
-//        list.addAll(ordersSaveResponseList);
+        list.addAll(ordersSaveResponseList);
         return list;
     }
 
