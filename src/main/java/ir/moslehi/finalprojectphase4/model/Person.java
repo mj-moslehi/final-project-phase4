@@ -17,7 +17,8 @@ import java.util.List;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PROTECTED)
-@MappedSuperclass
+@Inheritance(strategy = InheritanceType.JOINED)
+@Entity
 @SuperBuilder
 
 public class Person implements UserDetails {
