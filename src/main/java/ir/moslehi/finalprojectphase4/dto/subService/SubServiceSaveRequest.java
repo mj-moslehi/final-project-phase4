@@ -1,6 +1,6 @@
 package ir.moslehi.finalprojectphase4.dto.subService;
 
-import ir.moslehi.finalprojectphase4.dto.service.ServiceIdRequest;
+import ir.moslehi.finalprojectphase4.dto.service.ServiceNameRequest;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 
@@ -15,7 +15,7 @@ public record SubServiceSaveRequest(
         @Min(value = 0 )
         Long basePrice,
 
-        ServiceIdRequest service
+        ServiceNameRequest service
 
 ) {
 }

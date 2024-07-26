@@ -19,8 +19,9 @@ public class SubServiceService {
     public SubService save(SubService subService) {
         if (subServiceRepository.findByName(subService.getName()).isPresent())
             throw new DuplicateInformationException(subService.getName() + " is duplicate");
-        if (serviceService.findById(subService.getService().getId()) == null)
+        if (serviceService.findByName(subService.getService().getName()) == null)
             throw new NotFoundException("service wasn't found");
+        else subService.setService(serviceService.findByName(subService.getService().getName()));
         return subServiceRepository.save(subService);
     }
 
@@ -30,27 +31,21 @@ public class SubServiceService {
         return subServiceRepository.findByService(service);
     }
 
-    public SubService findById(Long id) {
-        return subServiceRepository.findById(id).orElseThrow(
-                () -> new NotFoundException("subService with id : " + id + " wasn't found")
-        );
-    }
-
-    public SubService findByName(String name){
+    public SubService findByName(String name) {
         return subServiceRepository.findByName(name).orElseThrow(
                 () -> new NotFoundException("subService with name : " + name + " wasn't found")
         );
     }
 
-    public SubService findSubSerBaseOnSer(Long serviceId, Long subServiceId) {
-        List<SubService> subServices = findByService(serviceService.findById(serviceId));
-        if (!subServices.contains(findById(subServiceId)))
+    public SubService findSubSerBaseOnSer(String serviceName, String subServiceName) {
+        List<SubService> subServices = findByService(serviceService.findByName(serviceName));
+        if (!subServices.contains(findByName(subServiceName)))
             throw new NotFoundException("the subService wasn't found");
-        return findById(subServiceId);
+        return findByName(subServiceName);
     }
 
     public SubService update(SubService subService) {
-        SubService foundSubService = findById(subService.getId());
+        SubService foundSubService = findByName(subService.getName());
         foundSubService.setBasePrice(subService.getBasePrice());
         foundSubService.setDescription(subService.getDescription());
         subServiceRepository.save(foundSubService);
