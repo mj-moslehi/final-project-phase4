@@ -1,8 +1,7 @@
 package ir.moslehi.finalprojectphase4.service;
 
-import ir.moslehi.finalprojectphase4.dto.search.UserSearchRequest;
+import ir.moslehi.finalprojectphase4.dto.search.AdminSearchingRequest;
 import ir.moslehi.finalprojectphase4.email.EmailSender;
-import ir.moslehi.finalprojectphase4.exception.DuplicateInformationException;
 import ir.moslehi.finalprojectphase4.exception.NotFoundException;
 import ir.moslehi.finalprojectphase4.exception.NotValidInput;
 import ir.moslehi.finalprojectphase4.model.Customer;
@@ -34,14 +33,14 @@ public class CustomerService {
     private final ConfirmationTokenService confirmationTokenService;
     private final EmailSender emailSender;
     private final ExpertService expertService;
+    private final PersonService personService;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     public void sava(Customer customer) {
         Date now = new Date();
-        if (customerRepository.findByEmail(customer.getEmail()).isPresent())
-            throw new DuplicateInformationException(customer.getEmail() + " is duplicate");
+        personService.findByEmail(customer.getEmail());
         customer.setValidity(0L);
         customer.setDateOfSignUp(now);
         customer.setPassword(passwordEncoder.encode(customer.getPassword()));
@@ -82,15 +81,10 @@ public class CustomerService {
         );
     }
 
-    public Customer findById(Long id) {
-        return customerRepository.findById(id).orElseThrow(
-                () -> new NotFoundException("customer with id " + id + " wasn't found")
-        );
-    }
-
     public Customer update(Customer customer, String email) {
         Customer foundeCustomer = findByEmail(email);
         foundeCustomer.setPassword(passwordEncoder.encode(customer.getPassword()));
+        personService.findByEmail(customer.getEmail());
         foundeCustomer.setEmail(customer.getEmail());
         return customerRepository.save(foundeCustomer);
     }
@@ -105,33 +99,37 @@ public class CustomerService {
         customerRepository.save(customer);
     }
 
-    public List<Customer> customerSearch(UserSearchRequest userSearchRequest) {
+    public List<Customer> customerSearch(AdminSearchingRequest adminSearchingRequest) {
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Customer> customerQuery = builder.createQuery(Customer.class);
         Root<Customer> root = customerQuery.from(Customer.class);
         List<Predicate> predicates = new ArrayList<>();
-        expertService.personsInfoInSearching(userSearchRequest, builder, root.get("role"), root.get("firstname"),
-                root.get("lastname"), root.get("email"), root.get("dateOfSignUp"), predicates);
-        if (userSearchRequest.enabled() != null)
-            predicates.add(builder.equal(root.get("enabled"), userSearchRequest.enabled()));
+
+        if (adminSearchingRequest.userEnabled() != null)
+            predicates.add(builder.equal(root.get("enabled"), adminSearchingRequest.userEnabled()));
+
+        expertService.personsInfoInSearching
+                (adminSearchingRequest, builder, root.get("role"), root.get("firstname"),
+                        root.get("lastname"), root.get("email"), root.get("validity")
+                , root.get("dateOfSignUp"), predicates);
 
         customerQuery.where(builder.and(predicates.toArray(predicates.toArray(new Predicate[]{}))));
 
         List<Customer> customerList = entityManager.createQuery(customerQuery).getResultList();
         List<Customer> newList = new ArrayList<>();
 
-        if (userSearchRequest.orderNum() != null) {
-            return orderNumInSearching(userSearchRequest, builder, customerList, newList);
+        if (adminSearchingRequest.orderNumForUser() != null) {
+            customerList.retainAll(orderNumInSearching(adminSearchingRequest, builder, customerList, newList));
         }
 
-        if (userSearchRequest.orderNumInDone() != null) {
-            return orderNumInDoneInSearching(userSearchRequest, builder, customerList, newList);
+        if (adminSearchingRequest.orderNumInDoneForUser() != null) {
+            customerList.retainAll(orderNumInDoneInSearching(adminSearchingRequest, builder, customerList, newList));
         }
 
         return customerList;
     }
 
-    private List<Customer> orderNumInSearching(UserSearchRequest userSearchRequest, CriteriaBuilder builder,
+    private List<Customer> orderNumInSearching(AdminSearchingRequest adminSearchingRequest, CriteriaBuilder builder,
                                                List<Customer> customerList, List<Customer> newList) {
         CriteriaQuery<Object[]> orderQuery = builder.createQuery(Object[].class);
         Root<Orders> rootOrder = orderQuery.from(Orders.class);
@@ -141,11 +139,11 @@ public class CustomerService {
         );
 
         orderQuery.groupBy(rootOrder.get("customer"));
-        orderQuery.having(builder.gt(builder.count(rootOrder), userSearchRequest.orderNum()));
+        orderQuery.having(builder.gt(builder.count(rootOrder), adminSearchingRequest.orderNumForUser()));
         return getCustomers(customerList, newList, orderQuery);
     }
 
-    private List<Customer> orderNumInDoneInSearching(UserSearchRequest userSearchRequest, CriteriaBuilder builder,
+    private List<Customer> orderNumInDoneInSearching(AdminSearchingRequest adminSearchingRequest, CriteriaBuilder builder,
                                                      List<Customer> customerList, List<Customer> newList) {
         CriteriaQuery<Object[]> orderQuery = builder.createQuery(Object[].class);
         Root<Orders> rootOrder = orderQuery.from(Orders.class);
@@ -156,7 +154,7 @@ public class CustomerService {
         );
         orderQuery.where(orderStatusPredicate);
         orderQuery.groupBy(rootOrder.get("customer"));
-        orderQuery.having(builder.gt(builder.count(rootOrder), userSearchRequest.orderNumInDone()));
+        orderQuery.having(builder.gt(builder.count(rootOrder), adminSearchingRequest.orderNumInDoneForUser()));
         return getCustomers(customerList, newList, orderQuery);
     }
 

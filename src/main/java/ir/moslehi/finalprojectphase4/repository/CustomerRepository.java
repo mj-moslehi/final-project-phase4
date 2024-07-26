@@ -10,13 +10,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Repository
-public interface CustomerRepository extends JpaRepository<Customer,Long> {
+public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     Optional<Customer> findByEmail(String email);
 
     @Transactional
     @Modifying
-    @Query("UPDATE Customer c " +
-            "SET c.enabled = TRUE WHERE c.email = ?1")
+    @Query("UPDATE Customer c SET c.enabled = TRUE WHERE c.email = ?1")
     void enableCustomer(String email);
 }

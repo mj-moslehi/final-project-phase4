@@ -1,4 +1,4 @@
 package ir.moslehi.finalprojectphase4.dto.customer;
 
-public record CustomerIdRequest(Long id) {
+public record CustomerEmailRequest(String email) {
 }

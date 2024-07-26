@@ -1,5 +1,7 @@
 package ir.moslehi.finalprojectphase4.dto.customer;
 
+import ir.moslehi.finalprojectphase4.model.enums.Role;
+
 import java.util.Date;
 
 public record CustomerSaveResponse(
@@ -10,6 +12,7 @@ public record CustomerSaveResponse(
         String password,
         Date dateOfSignUp,
         Long validity,
-        boolean enabled
+        boolean enabled,
+        Role role
 ) {
 }
