@@ -1,10 +1,10 @@
 package ir.moslehi.finalprojectphase4.dto.orders;
 
-import ir.moslehi.finalprojectphase4.dto.expert.ExpertIdRequest;
+import ir.moslehi.finalprojectphase4.dto.expert.ExpertEmailRequest;
 
 public record OrderChoosingExpert(
         OrderIdRequest order,
-        ExpertIdRequest expert
+        ExpertEmailRequest expert
 ) {
 
 }

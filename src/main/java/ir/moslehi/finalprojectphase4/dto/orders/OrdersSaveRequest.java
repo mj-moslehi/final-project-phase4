@@ -1,6 +1,6 @@
 package ir.moslehi.finalprojectphase4.dto.orders;
 
-import ir.moslehi.finalprojectphase4.dto.customer.CustomerIdRequest;
+import ir.moslehi.finalprojectphase4.dto.customer.CustomerEmailRequest;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 
@@ -20,7 +20,7 @@ public record OrdersSaveRequest(
 
         OrdersServiceAndSubServiceRequest ordersServiceAndSubService,
 
-        CustomerIdRequest customer
+        CustomerEmailRequest customer
 
         ) {
 }

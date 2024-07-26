@@ -1,10 +1,10 @@
 package ir.moslehi.finalprojectphase4.dto.orders;
 
-import ir.moslehi.finalprojectphase4.dto.service.ServiceIdRequest;
-import ir.moslehi.finalprojectphase4.dto.subService.SubServiceIdRequest;
+import ir.moslehi.finalprojectphase4.dto.service.ServiceNameRequest;
+import ir.moslehi.finalprojectphase4.dto.subService.SubServiceNameRequest;
 
 public record OrdersServiceAndSubServiceRequest(
-        ServiceIdRequest service,
-        SubServiceIdRequest subService
+        ServiceNameRequest service,
+        SubServiceNameRequest subService
 ){
 }

@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.text.ParseException;
+
 @RequiredArgsConstructor
 @RestController
 @Validated
@@ -24,7 +26,8 @@ public class OrdersController {
 
     @PostMapping("/register-order")
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
-    public ResponseEntity<OrdersSaveResponse> registerOrders(@Valid @RequestBody OrdersSaveRequest request) {
+    public ResponseEntity<OrdersSaveResponse> registerOrders
+            (@Valid @RequestBody OrdersSaveRequest request) throws ParseException {
         Orders orders = ordersService.save(request);
         return new ResponseEntity<>(OrderMapper.INSTANCE.modelToOrdersSaveResponse(orders), HttpStatus.CREATED);
     }
