@@ -44,15 +44,15 @@ public class ExpertController {
 
     @PostMapping("/write-image")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public void writeImage(@Valid @RequestBody ExpertWriteImage writeImage) {
-        expertService.writeImage(writeImage.path(), writeImage.expert().id());
+    public void writeImage(@Valid @RequestBody ExpertWriteImage writeImage ) {
+        expertService.writeImage(writeImage.path(), writeImage.expert().email());
     }
 
     @PatchMapping("/confirming-expert")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<ExpertSaveResponse> confirmingExpert(@RequestBody ExpertIdRequest expertId) {
+    public ResponseEntity<ExpertSaveResponse> confirmingExpert(@RequestParam String email) {
         return new ResponseEntity<>(ExpertMapper.INSTANCE.modelToExpertSaveResponse
-                (expertService.confirmedExpertStatus(expertId.id())), HttpStatus.CREATED);
+                (expertService.confirmedExpertStatus(email)), HttpStatus.CREATED);
     }
 
     @GetMapping("/order-history-expert")
@@ -71,7 +71,8 @@ public class ExpertController {
 
     @PatchMapping("/read-image")
     @PreAuthorize("hasRole('ROLE_EXPERT')")
-    public ResponseEntity<ExpertSaveResponse> readImage(Principal principal, @RequestParam MultipartFile file) throws IOException {
+    public ResponseEntity<ExpertSaveResponse> readImage
+            (Principal principal, @RequestParam MultipartFile file) throws IOException {
         Expert expert = expertService.findByEmail(principal.getName());
         expertService.readImage(expert, file);
         return new ResponseEntity<>(ExpertMapper.INSTANCE.modelToExpertSaveResponse(expert), HttpStatus.CREATED);

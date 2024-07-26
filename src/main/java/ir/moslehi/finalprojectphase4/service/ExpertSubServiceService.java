@@ -3,7 +3,6 @@ package ir.moslehi.finalprojectphase4.service;
 import ir.moslehi.finalprojectphase4.exception.DuplicateInformationException;
 import ir.moslehi.finalprojectphase4.exception.NotFoundException;
 import ir.moslehi.finalprojectphase4.model.Expert;
-import ir.moslehi.finalprojectphase4.model.enums.ExpertStatus;
 import ir.moslehi.finalprojectphase4.model.ExpertSubService;
 import ir.moslehi.finalprojectphase4.model.SubService;
 import ir.moslehi.finalprojectphase4.repository.Expert_SubServiceRepository;
@@ -23,14 +22,13 @@ public class ExpertSubServiceService {
     private final SubServiceService subServiceService;
 
     public ExpertSubService save(ExpertSubService expert_subService) {
-        Expert foundExpert = expertService.findById(expert_subService.getExpert().getId());
-        if (expert_subServiceRepository.findByExpertAndSubService
-                (expert_subService.getExpert(), expert_subService.getSubService()).isPresent())
+        Expert foundExpert = expertService.findByEmail(expert_subService.getExpert().getEmail());
+        SubService foundSubService = subServiceService.findByName(expert_subService.getSubService().getName());
+        if (expert_subServiceRepository.findByExpertAndSubService(foundExpert, foundSubService).isPresent())
             throw new DuplicateInformationException("the expert id : " + expert_subService.getExpert().getId() +
                     " and subService id : " + expert_subService.getSubService().getId() + " is duplicate");
-        if (!foundExpert.getExpertStatus().equals(ExpertStatus.CONFIRMED) &&
-                foundExpert.getScore() < 0)
-            throw new NotFoundException("that expert want' found");
+        expert_subService.setSubService(foundSubService);
+        expert_subService.setExpert(foundExpert);
         return expert_subServiceRepository.save(expert_subService);
     }
 
@@ -48,9 +46,10 @@ public class ExpertSubServiceService {
     }
 
 
-    public void removeByExpertAndSubService( Long expertId, Long subServiceId) {
+    public void removeByExpertAndSubService(ExpertSubService expert_SubService) {
         ExpertSubService expertSubService = findByExpertAndSubService
-                (expertService.findById(expertId), subServiceService.findById(subServiceId));
+                (expertService.findByEmail(expert_SubService.getExpert().getEmail())
+                        , subServiceService.findByName(expert_SubService.getSubService().getName()));
         expert_subServiceRepository.delete(expertSubService);
     }
 

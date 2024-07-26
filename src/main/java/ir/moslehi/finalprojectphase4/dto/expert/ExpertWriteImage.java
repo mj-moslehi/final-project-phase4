@@ -7,6 +7,6 @@ public record ExpertWriteImage(
         @Pattern(regexp = ".*\\.(jpg|jpeg)$")
         String path,
 
-        ExpertIdRequest expert
+        ExpertEmailRequest expert
 ) {
 }

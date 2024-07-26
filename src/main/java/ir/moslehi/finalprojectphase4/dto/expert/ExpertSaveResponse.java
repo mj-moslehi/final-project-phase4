@@ -1,8 +1,10 @@
 package ir.moslehi.finalprojectphase4.dto.expert;
 
 import ir.moslehi.finalprojectphase4.model.enums.ExpertStatus;
+import ir.moslehi.finalprojectphase4.model.enums.Role;
 
 import java.util.Date;
+import java.util.Random;
 
 public record ExpertSaveResponse(
         Long id,
@@ -14,6 +16,7 @@ public record ExpertSaveResponse(
         Double score,
         Long validity,
         ExpertStatus expertStatus,
-        boolean enabled
+        boolean enabled,
+        Role role
 ) {
 }

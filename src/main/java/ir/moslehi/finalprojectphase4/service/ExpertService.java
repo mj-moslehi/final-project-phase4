@@ -1,8 +1,7 @@
 package ir.moslehi.finalprojectphase4.service;
 
-import ir.moslehi.finalprojectphase4.dto.search.UserSearchRequest;
+import ir.moslehi.finalprojectphase4.dto.search.AdminSearchingRequest;
 import ir.moslehi.finalprojectphase4.email.EmailSender;
-import ir.moslehi.finalprojectphase4.exception.DuplicateInformationException;
 import ir.moslehi.finalprojectphase4.exception.NotFoundException;
 import ir.moslehi.finalprojectphase4.exception.NotValidInput;
 import ir.moslehi.finalprojectphase4.model.*;
@@ -12,10 +11,7 @@ import ir.moslehi.finalprojectphase4.model.enums.Role;
 import ir.moslehi.finalprojectphase4.repository.ExpertRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,14 +37,14 @@ public class ExpertService {
     private final SubServiceService subServiceService;
     private final ConfirmationTokenService confirmationTokenService;
     private final EmailSender emailSender;
+    private final PersonService personService;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     public void save(Expert expert) {
         Date now = new Date();
-        if (expertRepository.findByEmail(expert.getEmail()).isPresent())
-            throw new DuplicateInformationException(expert.getEmail() + " is duplicate");
+        personService.findByEmail(expert.getEmail());
         expert.setExpertStatus(ExpertStatus.New);
         expert.setDateOfSignUp(now);
         expert.setScore(0.0);
@@ -176,12 +172,6 @@ public class ExpertService {
         return expert;
     }
 
-    public Expert findById(Long id) {
-        return expertRepository.findById(id).orElseThrow(
-                () -> new NotFoundException("expert wasn't found")
-        );
-    }
-
     public void readImage(Expert expert, MultipartFile file) throws IOException {
         if (!Objects.requireNonNull(file.getOriginalFilename()).endsWith(".jpg"))
             throw new NotValidInput("file must be jpg");
@@ -194,13 +184,14 @@ public class ExpertService {
     public Expert update(Expert expert, String email) {
         Expert foudnExpert = findByEmail(email);
         foudnExpert.setPassword(passwordEncoder.encode(expert.getPassword()));
+        personService.findByEmail(expert.getEmail());
         foudnExpert.setEmail(expert.getEmail());
         return expertRepository.save(foudnExpert);
     }
 
-    public void writeImage(String pathString, Long expertId) {
+    public void writeImage(String pathString, String email) {
         Path path = Paths.get(pathString);
-        Expert expert = findById(expertId);
+        Expert expert = findByEmail(email);
         try (FileOutputStream fos = new FileOutputStream(path.toString())) {
             fos.write(expert.getImage());
         } catch (Exception e) {
@@ -208,11 +199,13 @@ public class ExpertService {
         }
     }
 
-    public Expert confirmedExpertStatus(Long expertId) {
-        Expert foundExpert = findById(expertId);
-        foundExpert.setExpertStatus(ExpertStatus.CONFIRMED);
-        foundExpert.setEnabled(true);
-        return expertRepository.save(foundExpert);
+    public Expert confirmedExpertStatus(String email) {
+        Expert foundExpert = findByEmail(email);
+        if (foundExpert.getExpertStatus().equals(ExpertStatus.WAITING_FOR_CONFIRMED)) {
+            foundExpert.setExpertStatus(ExpertStatus.CONFIRMED);
+            foundExpert.setEnabled(true);
+            return expertRepository.save(foundExpert);
+        } else throw new NotValidInput("the expert with id : " + foundExpert.getId() + " hasn't confirmed email");
     }
 
     public void updateScoreWithDelayHour(Expert expert, Double hours) {
@@ -246,40 +239,41 @@ public class ExpertService {
         );
     }
 
-    public List<Expert> expertSearch(UserSearchRequest userSearchRequest) {
+    public List<Expert> expertSearch(AdminSearchingRequest adminSearchingRequest) {
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Expert> expertQuery = builder.createQuery(Expert.class);
         Root<Expert> root = expertQuery.from(Expert.class);
         List<Predicate> predicates = new ArrayList<>();
 
-        personsInfoInSearching(userSearchRequest, builder, root.get("role"), root.get("firstname"),
-                root.get("lastname"), root.get("email"), root.get("dateOfSignUp"), predicates);
+        if (adminSearchingRequest.expertStatus() != null)
+            predicates.add(builder.equal(root.get("expertStatus"), adminSearchingRequest.expertStatus()));
+        if (adminSearchingRequest.score() != null)
+            predicates.add(builder.equal(root.get("score"), adminSearchingRequest.score()));
+        if (adminSearchingRequest.userEnabled() != null)
+            predicates.add(builder.equal(root.get("enabled"), adminSearchingRequest.userEnabled()));
 
-        if (userSearchRequest.expertStatus() != null)
-            predicates.add(builder.equal(root.get("expertStatus"), userSearchRequest.expertStatus()));
-        if (userSearchRequest.score() != null)
-            predicates.add(builder.equal(root.get("score"), userSearchRequest.score()));
-        if (userSearchRequest.enabled() != null)
-            predicates.add(builder.equal(root.get("enabled"), userSearchRequest.enabled()));
+        personsInfoInSearching(adminSearchingRequest, builder, root.get("role")
+                , root.get("firstname"), root.get("lastname"), root.get("email"),
+                root.get("validity"), root.get("dateOfSignUp"), predicates);
 
         expertQuery.where(builder.and(predicates.toArray(predicates.toArray(new Predicate[]{}))));
 
         List<Expert> expertList = entityManager.createQuery(expertQuery).getResultList();
         List<Expert> newList = new ArrayList<>();
 
-        if (userSearchRequest.orderNum() != null)
-            return orderNumInSearch(userSearchRequest, builder, expertList, newList);
+        if (adminSearchingRequest.orderNumForUser() != null)
+            expertList.retainAll(orderNumInSearch(adminSearchingRequest, builder, expertList, newList));
 
-        if (userSearchRequest.subServiceName() != null)
-            return subServiceNameInSearching(userSearchRequest, builder, expertList, newList);
+        if (adminSearchingRequest.expertSubServiceName() != null)
+            expertList.retainAll(subServiceNameInSearching(adminSearchingRequest, builder, expertList, newList));
 
-        if (userSearchRequest.orderNumInDone() != null)
-            return orderNumInDoneInSearching(userSearchRequest, builder, expertList, newList);
+        if (adminSearchingRequest.orderNumInDoneForUser() != null)
+            expertList.retainAll(orderNumInDoneInSearching(adminSearchingRequest, builder, expertList, newList));
 
         return expertList;
     }
 
-    private List<Expert> orderNumInSearch(UserSearchRequest userSearchRequest, CriteriaBuilder builder,
+    private List<Expert> orderNumInSearch(AdminSearchingRequest adminSearchingRequest, CriteriaBuilder builder,
                                           List<Expert> expertList, List<Expert> newList) {
         CriteriaQuery<Object[]> orderQuery = builder.createQuery(Object[].class);
         Root<Orders> rootOrder = orderQuery.from(Orders.class);
@@ -289,11 +283,11 @@ public class ExpertService {
         );
 
         orderQuery.groupBy(rootOrder.get("expert"));
-        orderQuery.having(builder.gt(builder.count(rootOrder), userSearchRequest.orderNum()));
+        orderQuery.having(builder.gt(builder.count(rootOrder), adminSearchingRequest.orderNumForUser()));
         return getExperts(expertList, newList, orderQuery);
     }
 
-    private List<Expert> orderNumInDoneInSearching(UserSearchRequest userSearchRequest, CriteriaBuilder builder,
+    private List<Expert> orderNumInDoneInSearching(AdminSearchingRequest adminSearchingRequest, CriteriaBuilder builder,
                                                    List<Expert> expertList, List<Expert> newList) {
         CriteriaQuery<Object[]> orderQuery = builder.createQuery(Object[].class);
         Root<Orders> rootOrder = orderQuery.from(Orders.class);
@@ -304,13 +298,13 @@ public class ExpertService {
         );
         orderQuery.where(orderStatusPredicate);
         orderQuery.groupBy(rootOrder.get("expert"));
-        orderQuery.having(builder.gt(builder.count(rootOrder), userSearchRequest.orderNumInDone()));
+        orderQuery.having(builder.gt(builder.count(rootOrder), adminSearchingRequest.orderNumInDoneForUser()));
         return getExperts(expertList, newList, orderQuery);
     }
 
-    private List<Expert> subServiceNameInSearching(UserSearchRequest userSearchRequest, CriteriaBuilder builder,
+    private List<Expert> subServiceNameInSearching(AdminSearchingRequest adminSearchingRequest, CriteriaBuilder builder,
                                                    List<Expert> expertList, List<Expert> newList) {
-        SubService subService = subServiceService.findByName(userSearchRequest.subServiceName());
+        SubService subService = subServiceService.findByName(adminSearchingRequest.expertSubServiceName());
         CriteriaQuery<Object[]> expertSubServiceQuery = builder.createQuery(Object[].class);
         Root<ExpertSubService> expertSubServiceRoot = expertSubServiceQuery.from(ExpertSubService.class);
         expertSubServiceQuery.select(expertSubServiceRoot.get("expert"))
@@ -319,26 +313,29 @@ public class ExpertService {
 
     }
 
-    public void personsInfoInSearching(UserSearchRequest userSearchRequest, CriteriaBuilder builder,
+    public void personsInfoInSearching(AdminSearchingRequest adminSearchingRequest, CriteriaBuilder builder,
                                        jakarta.persistence.criteria.Path<Object> role,
                                        jakarta.persistence.criteria.Path<Object> firstname,
                                        jakarta.persistence.criteria.Path<Object> lastname,
                                        jakarta.persistence.criteria.Path<Object> email,
+                                       jakarta.persistence.criteria.Path<Object> validity,
                                        jakarta.persistence.criteria.Path<Date> dateOfSignUp,
                                        List<Predicate> predicates) {
 
-        if (userSearchRequest.role() != null)
-            predicates.add(builder.equal(role, userSearchRequest.role()));
-        if (userSearchRequest.firstname() != null)
-            predicates.add(builder.equal(firstname, userSearchRequest.firstname()));
-        if (userSearchRequest.lastname() != null)
-            predicates.add(builder.equal(lastname, userSearchRequest.lastname()));
-        if (userSearchRequest.email() != null)
-            predicates.add(builder.equal(email, userSearchRequest.email()));
-        if (userSearchRequest.dateOfSignUpStart() != null)
-            predicates.add(builder.greaterThanOrEqualTo(dateOfSignUp, userSearchRequest.dateOfSignUpStart()));
-        if (userSearchRequest.dateOfSignUpEnd() != null)
-            predicates.add(builder.lessThanOrEqualTo(dateOfSignUp, userSearchRequest.dateOfSignUpEnd()));
+        if (adminSearchingRequest.role() != null)
+            predicates.add(builder.equal(role, adminSearchingRequest.role()));
+        if (adminSearchingRequest.firstname() != null)
+            predicates.add(builder.equal(firstname, adminSearchingRequest.firstname()));
+        if (adminSearchingRequest.lastname() != null)
+            predicates.add(builder.equal(lastname, adminSearchingRequest.lastname()));
+        if (adminSearchingRequest.email() != null)
+            predicates.add(builder.equal(email, adminSearchingRequest.email()));
+        if (adminSearchingRequest.dateOfSignUpStart() != null)
+            predicates.add(builder.greaterThanOrEqualTo(dateOfSignUp, adminSearchingRequest.dateOfSignUpStart()));
+        if (adminSearchingRequest.dateOfSignUpEnd() != null)
+            predicates.add(builder.lessThanOrEqualTo(dateOfSignUp, adminSearchingRequest.dateOfSignUpEnd()));
+        if (adminSearchingRequest.validity() != null)
+            predicates.add(builder.equal(validity, adminSearchingRequest.validity()));
     }
 
     private List<Expert> getExperts(List<Expert> expertList, List<Expert> newList, CriteriaQuery<Object[]> expertSubServiceQuery) {
@@ -364,6 +361,5 @@ public class ExpertService {
         orderCriteriaQuery.where(builder.and(predicates.toArray(predicates.toArray(new Predicate[]{}))));
         return entityManager.createQuery(orderCriteriaQuery).getResultList();
     }
-
 
 }

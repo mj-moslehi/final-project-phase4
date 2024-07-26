@@ -33,8 +33,9 @@ public class ExpertSubServiceController {
     @DeleteMapping("/delete-expert-sub-service")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void deleteExpertSubService(@RequestBody ExpertSubServiceSaveAndDeleteRequest deleteRequest){
-        ExpertSubService mapped = ExpertSubServiceMapper.INSTANCE.expertSubServiceSaveAdnDeleteRequestToModel(deleteRequest);
-        expertSubServiceService.removeByExpertAndSubService(mapped.getExpert().getId(),mapped.getSubService().getId());
+        ExpertSubService mapped =
+                ExpertSubServiceMapper.INSTANCE.expertSubServiceSaveAdnDeleteRequestToModel(deleteRequest);
+        expertSubServiceService.removeByExpertAndSubService(mapped);
     }
 
 }
